@@ -4,9 +4,10 @@ import abi from "../utils/payment.json";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import axios from "axios";
+import Web3 from "web3";
 
 export default function Home() {
-  const contractAddress = "0xE68C05dD79bF80f958AD4D453142b9Ad099b825B";
+  const contractAddress = "0x0f9ae0b2A73F0812010B9f96EE0767fC5d84e5d3";
 
   const contractABI = abi.abi;
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,7 @@ export default function Home() {
     walletconnect: {
       package: WalletConnectProvider, // required
       options: {
-        infuraId: "c42bd204d32641289769eb8a9a4c1607", // required
+        infuraId: "", // required
       },
     },
     binancechainwallet: {
@@ -44,15 +45,9 @@ export default function Home() {
   const getProviderOrSigner = async (needSigner = false) => {
     // Connect to Metamask
     // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
-    const { ethereum } = window;
-
-    if (!ethereum) {
-      alert("Get MetaMask!");
-      return;
-    }
 
     web3Modal = new Web3Modal({
-      network: "rinkeby", // optional
+      network: "bsc", // optional
       cacheProvider: true, // optional
       providerOptions, // required
     });
@@ -60,17 +55,14 @@ export default function Home() {
     provider = await web3Modal.connect();
     const web3Provider = new providers.Web3Provider(provider);
 
-    const accounts = await ethereum.request({ method: "eth_accounts" });
-    setAddress(accounts[0]);
-
     // If user is not connected to the Mainnet network, let them know and throw an error
     const { chainId } = await web3Provider.getNetwork();
     // rinkbey - 4
     // bsc - 97
     // polygon - 80001
-    if (chainId !== 4) {
-      window.alert("Change the network to Rinkeby");
-      throw new Error("Change network to rinkeby");
+    if (chainId !== 97) {
+      window.alert("Change the network to BSC");
+      throw new Error("Change network to BSC");
     }
 
     if (needSigner) {
@@ -259,48 +251,44 @@ export default function Home() {
 
   const connectWallet = async () => {
     try {
-      const { ethereum } = window;
+      // When used for the first time, it prompts the user to connect their wallet
+      const prov = await getProviderOrSigner();
 
-      if (ethereum) {
-        // Get the provider from web3Modal, which in our case is MetaMask
-        // When used for the first time, it prompts the user to connect their wallet
-        await getProviderOrSigner();
-        const accounts = await ethereum.request({ method: "eth_accounts" });
-        setAddress(accounts[0]);
-        const prov = await getProviderOrSigner();
-        const bal = await prov.getBalance(accounts[0]);
+      const web3 = new Web3(provider);
+      const accounts = await web3.eth.getAccounts();
 
+      setAddress(accounts[0]);
+
+      const bal = await prov.getBalance(accounts[0]);
+
+      setBalance(Number(BigNumber.from(bal)) / 10 ** 18);
+
+      // track when wallet is connected
+      localStorage.setItem("wall", "true");
+
+      // Subscribe to accounts change
+      provider.on("accountsChanged", async (accounts) => {
+        const provider = await getProviderOrSigner();
+        const bal = await provider.getBalance(accounts[0]);
         setBalance(Number(BigNumber.from(bal)) / 10 ** 18);
+      });
 
-        // track when wallet is connected
-        localStorage.setItem("wall", "true");
+      // Subscribe to chainId change
+      provider.on("chainChanged", async (chainId) => {
+        console.log("chain", chainId);
+        await getProviderOrSigner();
+      });
 
-        // Subscribe to accounts change
-        provider.on("accountsChanged", async (accounts) => {
-          const provider = await getProviderOrSigner();
-          const bal = await provider.getBalance(accounts[0]);
-          setBalance(Number(BigNumber.from(bal)) / 10 ** 18);
-        });
+      // Subscribe to provider connection
+      provider.on("connect", async (info) => {
+        console.log("inf", info);
+      });
 
-        // Subscribe to chainId change
-        provider.on("chainChanged", async (chainId) => {
-          console.log("chain", chainId);
-          await getProviderOrSigner();
-        });
-
-        // Subscribe to provider connection
-        provider.on("connect", async (info) => {
-          console.log("inf", info);
-        });
-
-        // Subscribe to provider disconnection
-        provider.on("disconnect", (error) => {
-          console.log("dis", error);
-          setAddress("");
-        });
-      } else {
-        alert("Please install Metamask");
-      }
+      // Subscribe to provider disconnection
+      provider.on("disconnect", (error) => {
+        console.log("dis", error);
+        setAddress("");
+      });
     } catch (err) {
       console.error(err);
     }
@@ -318,21 +306,17 @@ export default function Home() {
   };
 
   useEffect(() => {
-    console.log("change");
-    const { ethereum } = window;
+    if (localStorage.getItem("wall")) {
+      // Assign the Web3Modal class to the reference object by setting it's `current` value
+      // The `current` value is persisted throughout as long as this page is open
+      web3ModalRef.current = new Web3Modal({
+        network: "rinkeby",
+        providerOptions: {},
+        disableInjectedProvider: false,
+      });
 
-    if (ethereum) {
-      if (localStorage.getItem("wall")) {
-        // Assign the Web3Modal class to the reference object by setting it's `current` value
-        // The `current` value is persisted throughout as long as this page is open
-        web3ModalRef.current = new Web3Modal({
-          network: "rinkeby",
-          providerOptions: {},
-          disableInjectedProvider: false,
-        });
+      connectWallet();
 
-        connectWallet();
-      }
       setBalance(0);
     }
 
