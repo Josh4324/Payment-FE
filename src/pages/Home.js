@@ -98,7 +98,7 @@ export default function Home() {
               placeholder="Enter wallet address"
             />
           </div>
-          <div style={{ color: "white", padding: "5px" }}>
+          <div style={{ color: "blue", padding: "5px" }}>
             {loading === true ? "Transaction in progess......." : ""}
           </div>
           <div style={{ color: "red", padding: "5px" }}>
@@ -121,7 +121,7 @@ export default function Home() {
               placeholder="Enter amount in ether"
             />
           </div>
-          <div style={{ color: "white", padding: "5px" }}>
+          <div style={{ color: "blue", padding: "5px" }}>
             {loading1 === true ? "Transaction in progess......." : ""}
           </div>
           <div style={{ color: "red", padding: "5px" }}>
