@@ -7,7 +7,7 @@ import axios from "axios";
 import Web3 from "web3";
 
 export default function Home() {
-  const contractAddress = "0x0f9ae0b2A73F0812010B9f96EE0767fC5d84e5d3";
+  const contractAddress = "0xdC16A298b7562DECb67A026a3a9D4c254913e65A";
 
   const contractABI = abi.abi;
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,7 @@ export default function Home() {
     // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
 
     web3Modal = new Web3Modal({
-      network: "bsc", // optional
+      network: "polygon", // optional
       cacheProvider: true, // optional
       providerOptions, // required
     });
@@ -60,9 +60,9 @@ export default function Home() {
     // rinkbey - 4
     // bsc - 97
     // polygon - 80001
-    if (chainId !== 97) {
-      window.alert("Change the network to BSC Testnet");
-      throw new Error("Change network to BSC Testnet");
+    if (chainId !== 80001) {
+      window.alert("Change the network to Polygon Mumbai Testnet");
+      throw new Error("Change network to Polygon Mumbai Testnet");
     }
 
     if (needSigner) {
@@ -88,15 +88,14 @@ export default function Home() {
     }
 
     if (etherRef.current.value === "") {
-      return setError("Please enter bnb amount");
+      return setError("Please enter matic amount");
     }
 
     if (etherRef.current.value <= 0) {
-      return setError("You cant send zero or less than zero bnb");
+      return setError("You cant send zero or less than zero matic");
     }
 
     setLoading(true);
-
     const provider = await getProviderOrSigner();
     const signer = provider.getSigner();
 
@@ -146,15 +145,15 @@ export default function Home() {
     setMessage1("");
 
     if (etherAmountRef.current.value === "") {
-      return setError1("Please enter bnb amount");
+      return setError1("Please enter matic amount");
     }
 
     if (etherAmountRef.current.value <= 0) {
-      return setError1("You cant send zero or less than zero bnb");
+      return setError1("You cant send zero or less than zero matic");
     }
 
     setLoading1(true);
-    const provider = await getProviderOrSigner();
+    provider = await getProviderOrSigner();
     const signer = provider.getSigner();
 
     const paymentContract = new ethers.Contract(
@@ -199,16 +198,17 @@ export default function Home() {
 
   const getPrice = async () => {
     const data = await axios.get(
-      "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd"
+      "https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd"
     );
 
-    setPrice(data.data.binancecoin.usd);
+    setPrice(data.data["matic-network"].usd);
   };
 
   const getBalance = async () => {
     try {
+      //setLoading(true);
       const provider = new ethers.providers.JsonRpcProvider(
-        "https://data-seed-prebsc-1-s1.binance.org:8545"
+        "https://speedy-nodes-nyc.moralis.io/40a88f8745bc01d3bb660792/polygon/mumbai"
       );
 
       const paymentContract = new ethers.Contract(
@@ -236,6 +236,8 @@ export default function Home() {
 
       const bal = await prov.getBalance(accounts[0]);
 
+      console.log(balance);
+
       setBalance(Number(BigNumber.from(bal)) / 10 ** 18);
 
       // track when wallet is connected
@@ -245,7 +247,7 @@ export default function Home() {
       provider.on("accountsChanged", async (accounts) => {
         if (accounts[0]) {
           const provider = new ethers.providers.JsonRpcProvider(
-            "https://data-seed-prebsc-1-s1.binance.org:8545"
+            "https://speedy-nodes-nyc.moralis.io/40a88f8745bc01d3bb660792/polygon/mumbai"
           );
           const bal = await provider.getBalance(accounts[0]);
           setBalance(Number(BigNumber.from(bal)) / 10 ** 18);
@@ -340,24 +342,24 @@ export default function Home() {
 
       <div className="balance">
         <div>
-          Balance <div>{balance.toFixed(4)} bnb</div>
+          Balance <div>{balance.toFixed(4)} matic</div>
           <div>${(balance * price).toFixed(2)}</div>
         </div>
 
         <div>
-          Contract balance <div>{contractBalance} bnb</div>
+          Contract balance <div>{contractBalance} matic</div>
           <div>${(contractBalance * price).toFixed(2)}</div>
         </div>
       </div>
 
       <div className="box">
         <div className="inner__box">
-          <div className="text">Send BNB to Another Wallet Address</div>
+          <div className="text">Send MATIC to Another Wallet Address</div>
           <div>
             <input
               className="input"
               ref={etherRef}
-              placeholder="Enter amount in bnb"
+              placeholder="Enter amount in matic"
             />
           </div>
           <div>
@@ -382,12 +384,12 @@ export default function Home() {
         </div>
 
         <div className="inner__box">
-          <div className="text">Send BNB to Contract</div>
+          <div className="text">Send MATIC to Contract</div>
           <div>
             <input
               ref={etherAmountRef}
               className="input"
-              placeholder="Enter amount in bnb"
+              placeholder="Enter amount in matic"
             />
           </div>
           <div style={{ color: "blue", padding: "5px" }}>
