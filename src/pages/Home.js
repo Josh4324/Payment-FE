@@ -7,7 +7,7 @@ import axios from "axios";
 import Web3 from "web3";
 
 export default function Home() {
-  const contractAddress = "0xE68C05dD79bF80f958AD4D453142b9Ad099b825B";
+  const contractAddress = "0x0f9ae0b2A73F0812010B9f96EE0767fC5d84e5d3";
 
   const contractABI = abi.abi;
   const [loading, setLoading] = useState(false);
@@ -60,9 +60,9 @@ export default function Home() {
     // rinkbey - 4
     // bsc - 97
     // polygon - 80001
-    if (chainId !== 4) {
-      window.alert("Change the network to Rinkeby");
-      throw new Error("Change network to Rinkeby");
+    if (chainId !== 97) {
+      window.alert("Change the network to BSC Testnet");
+      throw new Error("Change network to BSC Testnet");
     }
 
     if (needSigner) {
@@ -88,11 +88,11 @@ export default function Home() {
     }
 
     if (etherRef.current.value === "") {
-      return setError("Please enter ether amount");
+      return setError("Please enter bnb amount");
     }
 
     if (etherRef.current.value <= 0) {
-      return setError("You cant send zero or less than zero ethers");
+      return setError("You cant send zero or less than zero bnb");
     }
 
     setLoading(true);
@@ -146,11 +146,11 @@ export default function Home() {
     setMessage1("");
 
     if (etherAmountRef.current.value === "") {
-      return setError1("Please enter ether amount");
+      return setError1("Please enter bnb amount");
     }
 
     if (etherAmountRef.current.value <= 0) {
-      return setError1("You cant send zero or less than zero ethers");
+      return setError1("You cant send zero or less than zero bnb");
     }
 
     setLoading1(true);
@@ -175,7 +175,8 @@ export default function Home() {
 
       setLoading1(false);
       setMessage1("Payment was successful");
-      const bal = await provider.getBalance(address);
+      const prov = await getProviderOrSigner();
+      const bal = await prov.getBalance(address);
       setBalance(Number(BigNumber.from(bal)) / 10 ** 18);
 
       walletRef.current.value = "";
@@ -198,17 +199,16 @@ export default function Home() {
 
   const getPrice = async () => {
     const data = await axios.get(
-      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+      "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd"
     );
 
-    setPrice(data.data.ethereum.usd);
+    setPrice(data.data.binancecoin.usd);
   };
 
   const getBalance = async () => {
     try {
-      //setLoading(true);
       const provider = new ethers.providers.JsonRpcProvider(
-        "https://eth-rinkeby.alchemyapi.io/v2/0mjCfRXMhCmlg6NpHLkztqcvtEbqG9__"
+        "https://data-seed-prebsc-1-s1.binance.org:8545"
       );
 
       const paymentContract = new ethers.Contract(
@@ -218,7 +218,6 @@ export default function Home() {
       );
 
       const contractBalance = await paymentContract.getBalance();
-
       setContractBalance(Number(BigNumber.from(contractBalance)) / 10 ** 18);
     } catch (error) {
       console.log(error);
@@ -246,11 +245,11 @@ export default function Home() {
       provider.on("accountsChanged", async (accounts) => {
         if (accounts[0]) {
           const provider = new ethers.providers.JsonRpcProvider(
-            "https://eth-rinkeby.alchemyapi.io/v2/0mjCfRXMhCmlg6NpHLkztqcvtEbqG9__"
+            "https://data-seed-prebsc-1-s1.binance.org:8545"
           );
           const bal = await provider.getBalance(accounts[0]);
-          setAddress(accounts[0]);
           setBalance(Number(BigNumber.from(bal)) / 10 ** 18);
+          setAddress(accounts[0]);
         }
       });
 
@@ -300,6 +299,7 @@ export default function Home() {
     }
 
     setBalance(0);
+
     // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
   }, [address]);
 
@@ -340,24 +340,24 @@ export default function Home() {
 
       <div className="balance">
         <div>
-          Balance <div>{balance.toFixed(4)} ether</div>
+          Balance <div>{balance.toFixed(4)} bnb</div>
           <div>${(balance * price).toFixed(2)}</div>
         </div>
 
         <div>
-          Contract balance <div>{contractBalance} ether</div>
+          Contract balance <div>{contractBalance} bnb</div>
           <div>${(contractBalance * price).toFixed(2)}</div>
         </div>
       </div>
 
       <div className="box">
         <div className="inner__box">
-          <div className="text">Send Ether to Another Wallet Address</div>
+          <div className="text">Send BNB to Another Wallet Address</div>
           <div>
             <input
               className="input"
               ref={etherRef}
-              placeholder="Enter amount in ether"
+              placeholder="Enter amount in bnb"
             />
           </div>
           <div>
@@ -382,12 +382,12 @@ export default function Home() {
         </div>
 
         <div className="inner__box">
-          <div className="text">Send Ether to Contract</div>
+          <div className="text">Send BNB to Contract</div>
           <div>
             <input
               ref={etherAmountRef}
               className="input"
-              placeholder="Enter amount in ether"
+              placeholder="Enter amount in bnb"
             />
           </div>
           <div style={{ color: "blue", padding: "5px" }}>
